@@ -1,0 +1,7 @@
+[config]
+# Interval in seconds (don't set this to less than 2 seconds)
+interval = 30
+# List of subreddits to monitor
+subreddits = [
+    "buildapcsales"
+]
