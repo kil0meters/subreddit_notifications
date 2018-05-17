@@ -1,4 +1,4 @@
-import toml, time, requests, notify2
+import toml, time, requests, notify2, os
 import xml.etree.ElementTree as ET
 
 # loads and parses config_file
@@ -48,25 +48,39 @@ def getNewPosts(posts, mostRecentTime):
     mostRecentTime = max(times)
     return mostRecentTime, newPosts
 
+def filterTags(posts, tags):
+    newPosts = []
+    for post in posts:
+        for tag in tags:
+            if tag in post[0]:
+                newPosts.append(post)
+                break
+    return newPosts
+
 def printPosts(posts):
     string = ''
     for post in posts:
         string += "TITLE: {}\n".format(post[0])
         string += "LINK: {}\n\n".format(post[1])
     print(string)
-    n = notify2.Notification("NEW POSTS", string, "notification-message-im")
-    n.show()
+    if os.name == 'posix':
+        n = notify2.Notification("NEW POSTS", string, "notification-message-im")
+        n.show()
 
 def main():
-    notify2.init("Reddit Notifier")
+    if os.name == 'posix':
+        notify2.init("Reddit Notifier")
 
     config = loadConfigFile("config.toml")
     interval = config['config']['interval']
     subreddits = config['config']['subreddits']
+    tags = config['config']['tags']
     mostRecentTime = 0
     while True:
         posts = fetchPosts(subreddits)
         mostRecentTime, posts = getNewPosts(posts, mostRecentTime)
+        if len(tags) > 0:
+            posts = filterTags(posts, tags)
         if len(posts) > 0:
             printPosts(posts)
         time.sleep(interval)

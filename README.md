@@ -22,13 +22,22 @@ interval = 30
 subreddits = [
     "buildapcsales"
 ]
+# Show posts only containing one of these tags
+tags = [
+    "GPU"
+]
 ```
-You can add additional subreddits to the list by editing the `subreddits` entry
+You can add additional subreddits or tags by editing their respective entries.
 like so:
 ```toml
 subreddits = [
     "subreddit1",
     "subreddit2",
     "subreddit3"
+]
+tag = [
+    "tag1",
+    "tag2",
+    "tag3"
 ]
 ```
