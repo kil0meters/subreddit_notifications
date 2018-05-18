@@ -7,5 +7,5 @@ subreddits = [
 ]
 # Show posts only containing one of these tags
 tags = [
-    "GPU"
+    "GPU",
 ]

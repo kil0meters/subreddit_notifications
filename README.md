@@ -6,7 +6,7 @@ Notifies you of new posts on a particular set of subreddits.
 You need python3 installed to run this program.
 
 ```
-pip3 install toml requests notify2
+pip3 install toml requests
 git clone https://github.com/kil0meters/subreddit_notifications
 python3 main.py
 ```
