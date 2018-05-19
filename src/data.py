@@ -5,7 +5,11 @@ import sys
 WHITELISTED_USERS = ['kil0meters', 'genericasianperson']
 
 def connect():
-    return lite.connect('users.db')
+    db = lite.connect('users.db')
+    cur = db.cursor()
+    cur.execute("create table if not exists users (name text, filters text, subreddits text)")
+    db.commit()
+    return db
 
 def users(con):
     cur = con.cursor()
@@ -16,7 +20,7 @@ def users(con):
 def update_user(data, con):
     cur = con.cursor()
     username = data['username']
-    if username is not in WHITELISTED_USERS:
+    if username not in WHITELISTED_USERS:
         return
     filters = '(?i)(' + '|'.join(data['filters']) + ')'
     subreddits = ','.join(data['subreddits'])
