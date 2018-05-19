@@ -24,8 +24,6 @@ def fetch_posts(subreddits):
                            "like Gecko) Chrome/59.0.3071.109 Safari/537.36")
         }
         res = requests.get(url, headers=headers)
-        #print(r.text)
-        #print(subreddit)
         tree = ET.fromstring(res.text)
         for child in tree:
             if child.tag == "{http://www.w3.org/2005/Atom}entry":
@@ -77,8 +75,6 @@ def apply_filters(posts_by_subreddit, filters):
 def send_updates(posts_by_subreddit, username, account):
     current_time = time.mktime(datetime.datetime.utcnow().timetuple())
     total_content = ''
-    print("posts by subreddit:")
-    print(posts_by_subreddit)
     for subreddit, posts in posts_by_subreddit.items():
         total_content += '#r/' + subreddit
         total_content += '\n---\n\n'
@@ -90,12 +86,6 @@ def send_updates(posts_by_subreddit, username, account):
                 minutes = how_long_ago // 60
                 seconds = how_long_ago - (minutes * 60)
                 total_content += "**[{}]({})** ^([{} hours {} minutes {} seconds ago])\n\n".format(post[0], post[1], hours, minutes, seconds)
-                #if os.name == 'posix':
-                    # FIXME: For some reason ANSI escape codes don't work with built in python functions
-                    #subprocess.Popen(['echo', '-e', "{} [{} hours {} minutes {} seconds ago]\n{}\n"\
-                    #    .format(post[3], hours, minutes, seconds, post[1])])
-                #else:
-                    #print("{}\n{}\n\n", title, post[1])
         else:
             total_content += "It looks like there's nothing here :(\n"
     reddit.send_pm("New Posts", total_content, username, account)

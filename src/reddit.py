@@ -15,11 +15,12 @@ def update_users(db, account):
             try:
                 config = json.loads(message.body)
                 config['username'] = message.author.name
-                print(config)
+                print("Updating user..")
                 data.update_user(config, db)
                 print(config)
                 message.mark_read()
             except:
+                print("An error occured: Invalid Configuration")
                 message.reply("An error occured: Invalid Configuration")
                 message.mark_read()
         else:
