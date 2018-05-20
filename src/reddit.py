@@ -22,9 +22,9 @@ def fetch_posts(subreddits, account):
             link = 'https://reddit.com' + submission.permalink
             post_time = submission.created_utc
 
-            subreddit_posts.append([title, link, post_time, subreddit_name])
-        posts_by_subreddit[subreddit] = subreddit_posts
-        time.sleep(2)
+            subreddit_posts.append([title, link, post_time])
+        posts_by_subreddit[subreddit_name] = subreddit_posts
+        time.sleep(0.5)
     return posts_by_subreddit
 
 def update_users(db, account):
@@ -33,7 +33,6 @@ def update_users(db, account):
             try:
                 config = json.loads(message.body)
                 config['username'] = message.author.name
-                print("Updating user..")
                 data.update_user(config, db)
                 print(config)
                 message.mark_read()

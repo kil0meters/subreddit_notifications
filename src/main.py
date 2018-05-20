@@ -3,6 +3,7 @@ import datetime
 import re
 import time
 import data
+import json
 import reddit
 
 # only shows posts that are new
@@ -25,61 +26,56 @@ def get_new_posts(posts_by_subreddit, most_recent_time):
     return most_recent_time, new_posts_by_subreddit
 
 # only shows posts that match certain filters
-def apply_filters(posts_by_subreddit, filters):
+def apply_filters(posts_by_subreddit, subs, username, db):
     new_posts_by_subreddit = {}
-    for (subreddit, posts) in posts_by_subreddit.items():
+    for sub, posts in posts_by_subreddit.items():
+        if sub not in subs:
+            continue
         new_posts = []
+        filter = data.get_filter(db, username, sub)[0]
         for post in posts:
-            if re.match(filters, post[0]):
+            if re.match(filter, post[0]):
                 new_posts.append(post)
-        new_posts_by_subreddit[subreddit] = new_posts
+        new_posts_by_subreddit[sub] = new_posts
     return new_posts_by_subreddit
 
 # uses system notify-send command to post notification on linux
-def send_updates(posts_by_subreddit, username, account):
+def send_updates(posts, username, account):
     current_time = time.mktime(datetime.datetime.utcnow().timetuple())
     subject = 'New Posts from '
     total_content = ''
     for subreddit, posts in posts_by_subreddit.items():
         if posts:
-            subject += '/r/{} '.format(subreddit.display_name)
-            total_content += '#r/' + subreddit.display_name
+            subject += '/r/{} '.format(subreddit)
+            total_content += '#r/' + subreddit
             total_content += '\n---\n\n'
             for post in posts:
-                how_long_ago = int(current_time - (post[2] + 25200))
-                hours = how_long_ago // 3600
-                how_long_ago = how_long_ago - (hours * 3600)
-                minutes = how_long_ago // 60
-                seconds = how_long_ago - (minutes * 60)
-                total_content += "**[{}]({})** ^([{} hours {} minutes {} seconds ago])\n\n".format(post[0], post[1], hours, minutes, seconds)
-    reddit.send_pm(subject, total_content, username, account)
+                seconds = int(current_time - (post[2] + 25200))
+                total_content += "**[{}]({})** ^([{} seconds ago])\n\n".format(post[0], post[1], seconds)
+    if total_content != '':
+        reddit.send_pm(subject, total_content, username, account)
 
-def main():
+if __name__ == '__main__':
     account = reddit.connect()
     db = data.connect()
-    users = data.users(db)
     most_recent_time = 0
     interval = 30
     while True:
-        for user in users:
-            username = user[0]
-            filters = user[1]
-            subreddits = user[2].split(',')
-            posts_by_subreddit = reddit.fetch_posts(subreddits, account)
-            most_recent_time, posts_by_subreddit = get_new_posts(posts_by_subreddit, most_recent_time)
-
-            is_new_posts = False
-            posts_by_subreddit = apply_filters(posts_by_subreddit, filters)
-            for subreddit, posts in posts_by_subreddit.items():
-                if posts:
-                    is_new_posts = True
-                    break
-            if is_new_posts:
-                send_updates(posts_by_subreddit, username, account)
-            time.sleep(2)
-        #time.sleep(interval)
         reddit.update_users(db, account)
-        users = data.users(db)
+        global_sub_list = data.subreddits(db)
+        subs = data.subreddits(db)
+        user_list = data.users(db)
+        if global_sub_list:
+            posts_by_subreddit = reddit.fetch_posts(subs, account)
 
+            posts_by_subreddit_by_users = {}
+            for user in user_list:
+                most_recent_time, posts_by_subreddit = get_new_posts(posts_by_subreddit, most_recent_time)
+                posts_by_subreddit = apply_filters(posts_by_subreddit, user[1], user[0], db)
+                try:
+                    posts_by_subreddit_by_users[user[0]] += posts_by_subreddit
+                except:
+                    posts_by_subreddit_by_users[user[0]] = posts_by_subreddit
 
-main()
+            for username, posts in posts_by_subreddit_by_users.items():
+                send_updates(posts, username, account)
