@@ -1,45 +1,9 @@
 #!/usr/bin/python3
 import datetime
-import os
 import re
-import subprocess
 import time
-import xml.etree.ElementTree as ET
-import requests
-import json
 import data
 import reddit
-
-# loads sqlite database, gets new posts on all of the new subreddits
-# pms them the new posts that match their tags and subreddits
-
-# fetches content on https://reddit.com/r/SUBREDDIT/new
-def fetch_posts(subreddits):
-    posts_by_subreddit = {}
-    for subreddit in subreddits:
-        subreddit_posts = []
-        url = "http://reddit.com/r/{}/new/.rss".format(subreddit)
-        headers = {
-            'User-Agent': ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, " +
-                           "like Gecko) Chrome/59.0.3071.109 Safari/537.36")
-        }
-        res = requests.get(url, headers=headers)
-        tree = ET.fromstring(res.text)
-        for child in tree:
-            if child.tag == "{http://www.w3.org/2005/Atom}entry":
-                title = child[-1].text
-
-                link = child[-3].attrib['href']
-
-                post_time_string = child[-2].text
-                if post_time_string.endswith("+00:00"):
-                    post_time_string = post_time_string[:-6]
-                post_time = time.mktime(time.strptime(post_time_string, '%Y-%m-%dT%H:%M:%S'))
-
-                subreddit_posts.append([title, link, post_time, subreddit])
-        posts_by_subreddit[subreddit] = subreddit_posts
-        time.sleep(2)
-    return posts_by_subreddit
 
 # only shows posts that are new
 def get_new_posts(posts_by_subreddit, most_recent_time):
@@ -76,18 +40,16 @@ def send_updates(posts_by_subreddit, username, account):
     current_time = time.mktime(datetime.datetime.utcnow().timetuple())
     total_content = ''
     for subreddit, posts in posts_by_subreddit.items():
-        total_content += '#r/' + subreddit
-        total_content += '\n---\n\n'
         if posts:
+            total_content += '#r/' + subreddit.display_name
+            total_content += '\n---\n\n'
             for post in posts:
-                how_long_ago = int(current_time - post[2])
+                how_long_ago = int(current_time - (post[2] + 25200))
                 hours = how_long_ago // 3600
                 how_long_ago = how_long_ago - (hours * 3600)
                 minutes = how_long_ago // 60
                 seconds = how_long_ago - (minutes * 60)
                 total_content += "**[{}]({})** ^([{} hours {} minutes {} seconds ago])\n\n".format(post[0], post[1], hours, minutes, seconds)
-        else:
-            total_content += "It looks like there's nothing here :(\n"
     reddit.send_pm("New Posts", total_content, username, account)
 
 def main():
@@ -101,7 +63,7 @@ def main():
             username = user[0]
             filters = user[1]
             subreddits = user[2].split(',')
-            posts_by_subreddit = fetch_posts(subreddits)
+            posts_by_subreddit = reddit.fetch_posts(subreddits, account)
             most_recent_time, posts_by_subreddit = get_new_posts(posts_by_subreddit, most_recent_time)
 
             is_new_posts = False

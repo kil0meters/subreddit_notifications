@@ -20,6 +20,7 @@ def update_user(data, db):
     cur = db.cursor()
     username = data['username']
     if username not in WHITELISTED_USERS:
+        print("The user is not whitelisted")
         return
     filters = '(?i)(' + '|'.join(data['filters']) + ')'
     subreddits = ','.join(data['subreddits'])
