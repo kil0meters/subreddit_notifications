@@ -38,9 +38,11 @@ def apply_filters(posts_by_subreddit, filters):
 # uses system notify-send command to post notification on linux
 def send_updates(posts_by_subreddit, username, account):
     current_time = time.mktime(datetime.datetime.utcnow().timetuple())
+    subject = 'New Posts from '
     total_content = ''
     for subreddit, posts in posts_by_subreddit.items():
         if posts:
+            subject += '/r/{} '.format(subreddit.display_name)
             total_content += '#r/' + subreddit.display_name
             total_content += '\n---\n\n'
             for post in posts:
@@ -50,7 +52,7 @@ def send_updates(posts_by_subreddit, username, account):
                 minutes = how_long_ago // 60
                 seconds = how_long_ago - (minutes * 60)
                 total_content += "**[{}]({})** ^([{} hours {} minutes {} seconds ago])\n\n".format(post[0], post[1], hours, minutes, seconds)
-    reddit.send_pm("New Posts", total_content, username, account)
+    reddit.send_pm(subject, total_content, username, account)
 
 def main():
     account = reddit.connect()
