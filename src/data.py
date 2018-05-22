@@ -17,6 +17,23 @@ def users(con):
     rows = cur.fetchall()
     return rows
 
+def get_most_recent_time():
+    try:
+        file = open("most_recent_time.txt", 'r')
+        text = file.read()
+        file.close()
+        return float(text)
+    except:
+        file = open("most_recent_time.txt", 'a')
+        file.close()
+        return 0
+
+
+def set_most_recent_time(most_recent_time):
+    file  = open("most_recent_time.txt", 'w')
+    file.write(str(most_recent_time))
+    file.close()
+
 def get_filter(db, username, sub):
     cur = db.cursor()
     cur.execute('select filter from filters where username="{}" and subreddit="{}"'.format(username, sub))
