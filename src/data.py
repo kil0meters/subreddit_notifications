@@ -51,9 +51,6 @@ def update_user(user_data, db):
         print("Creating new user: " + username)
         cur.execute('insert into users values ("{}", "{}")'.format(username, subreddit_list))
     for subreddit in subreddit_filter_list:
-        print(username)
-        print(subreddit[1])
-        print(subreddit[0])
         cur.execute('insert into filters values ("{}", "(?i)({})", "{}")'.format(username, subreddit[1], subreddit[0]))
     db.commit()
 

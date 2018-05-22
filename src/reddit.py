@@ -47,7 +47,3 @@ def update_users(db, account):
 def send_pm(subject, body, user, account):
     redditor = account.redditor(user)
     redditor.message(subject, body)
-    print(subject)
-    print("to: " + user)
-    print('---')
-    print(body)

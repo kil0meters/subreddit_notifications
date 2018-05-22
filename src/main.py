@@ -34,16 +34,17 @@ def apply_filters(posts_by_subreddit, subs, username, db):
         new_posts = []
         filter = data.get_filter(db, username, sub)[0]
         for post in posts:
-            if re.match(filter, post[0]):
+            if re.search(filter, post[0]):
                 new_posts.append(post)
         new_posts_by_subreddit[sub] = new_posts
     return new_posts_by_subreddit
 
 # uses system notify-send command to post notification on linux
-def send_updates(posts, username, account):
+def send_updates(posts_by_subreddit, username, account):
     current_time = time.mktime(datetime.datetime.utcnow().timetuple())
     subject = 'New Posts from '
     total_content = ''
+    debug_content = ''
     for subreddit, posts in posts_by_subreddit.items():
         if posts:
             subject += '/r/{} '.format(subreddit)
@@ -52,7 +53,12 @@ def send_updates(posts, username, account):
             for post in posts:
                 seconds = int(current_time - (post[2] + 25200))
                 total_content += "**[{}]({})** ^([{} seconds ago])\n\n".format(post[0], post[1], seconds)
+                debug_content += "{} [{} seconds ago]\n{}\n\n".format(post[0], seconds, post[1])
     if total_content != '':
+        print("subject: " + subject)
+        print("to: " + username)
+        print("---")
+        print(debug_content)
         reddit.send_pm(subject, total_content, username, account)
 
 if __name__ == '__main__':
@@ -69,8 +75,8 @@ if __name__ == '__main__':
             posts_by_subreddit = reddit.fetch_posts(subs, account)
 
             posts_by_subreddit_by_users = {}
+            most_recent_time, posts_by_subreddit = get_new_posts(posts_by_subreddit, most_recent_time)
             for user in user_list:
-                most_recent_time, posts_by_subreddit = get_new_posts(posts_by_subreddit, most_recent_time)
                 posts_by_subreddit = apply_filters(posts_by_subreddit, user[1], user[0], db)
                 try:
                     posts_by_subreddit_by_users[user[0]] += posts_by_subreddit
