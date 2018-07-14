@@ -1,10 +1,13 @@
-#!/usr/bin/python3
-import datetime
+mport datetime
 import re
 import time
 import data
 import json
 import reddit
+
+def log(string):
+    with open("log.txt", "a") as _file:
+        _file.write("[{}] {}\n".format(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), string))
 
 # only shows posts that are new
 def get_new_posts(posts_by_subreddit, most_recent_time):
@@ -53,7 +56,7 @@ def send_updates(posts_by_subreddit, username, account):
             total_content += '\n---\n\n'
             for post in posts:
                 post_count += 1
-                seconds = int(current_time - (post[2] + 25200))
+                seconds = int(current_time - (post[2])) #only works in east coast
                 total_content += "**[{}]({})** ^([{} seconds ago])\n\n".format(post[0], post[1], seconds)
                 debug_content += "{} [{} seconds ago]\n{}\n\n".format(post[0], seconds, post[1])
     if total_content != '':
@@ -61,10 +64,10 @@ def send_updates(posts_by_subreddit, username, account):
             subject = "{} New Posts from {}".format(post_count, subject_subreddits)
         else:
             subject = "New Post from " + subject_subreddits
-        print("subject: " + subject)
-        print("to: " + username)
-        print("---")
-        print(debug_content)
+        log("subject: " + subject)
+        log("to: " + username)
+        log("---")
+        log(debug_content)
         reddit.send_pm(subject, total_content, username, account)
 
 if __name__ == '__main__':
@@ -93,4 +96,6 @@ if __name__ == '__main__':
 
             for username, posts in posts_by_subreddit_by_users.items():
                 send_updates(posts, username, account)
+        time.sleep(2)
         data.set_most_recent_time(most_recent_time)
+

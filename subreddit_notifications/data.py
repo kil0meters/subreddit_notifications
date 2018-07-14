@@ -2,9 +2,10 @@ import sqlite3 as lite
 import json
 import sys
 from secrets import WHITELISTED_USERS
+import subreddit_notifications
 
 def connect():
-    db = lite.connect('test.db')
+    db = lite.connect('users.db')
     cur = db.cursor()
     cur.execute("create table if not exists users (username text, subreddits text)")
     cur.execute("create table if not exists filters (username text, filter text, subreddit text)")
@@ -52,7 +53,7 @@ def update_user(user_data, db):
     username = user_data['username']
     subreddit_filter_list = user_data['subreddits']
     if username not in WHITELISTED_USERS:
-        print("The user {} is not whitelisted".format(username))
+        subreddit_notifications.log("The user {} is not whitelisted".format(username))
         return
     subreddit_list = []
     for subreddit in subreddit_filter_list:
@@ -61,11 +62,11 @@ def update_user(user_data, db):
     subreddit_list = ','.join(subreddit_list)
     cur.execute('select username from users where username="{}"'.format(username))
     if cur.fetchall():
-        print("Updating user: " + username)
+        subreddit_notifications.log("Updating user: " + username)
         cur.execute('update users set subreddits="{}" where username="{}"'.format(subreddit_list,username))
         cur.execute('delete from filters where username="{}"'.format(username))
     else:
-        print("Creating new user: " + username)
+        subreddit_notifications.log("Creating new user: " + username)
         cur.execute('insert into users values ("{}", "{}")'.format(username, subreddit_list))
     for subreddit in subreddit_filter_list:
         cur.execute('insert into filters values ("{}", "(?i)({})", "{}")'.format(username, subreddit[1], subreddit[0]))
@@ -75,3 +76,4 @@ def remove_user(user, con):
     cur = con.cursor()
     cur.execute("drop {} from users".format(user))
     con.commit()
+
