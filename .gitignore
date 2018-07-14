@@ -2,3 +2,4 @@ __pycache__
 secrets.py
 *.db
 most_recent_time.txt
+log.txt
